@@ -50,3 +50,5 @@ Process Empleado {
 Algunos ponen que las 5 primeras personas salen y van a otro p(turno[id]) y el empleado las atiende
 aparte a esas 5 personas. Yo directamente si hay 5 esperando ya las atiendo, y si hay mas de 5 
 esperando después sigue atendiendo.
+
+Ya entendí, lo hice mal =(
