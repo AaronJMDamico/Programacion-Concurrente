@@ -1,0 +1,57 @@
+1)
+
+Resolver el siguiente problema. En una elección estudiantil, se utiliza una máquina para voto
+electrónico. Existen N Personas que votan y una Autoridad de Mesa que les da acceso a la máquina
+de acuerdo con el orden de llegada, aunque ancianos y embarazadas tienen prioridad sobre el resto.
+La máquina de voto sólo puede ser usada por una persona a la vez.
+Nota: la función Votar() permite usar la máquina.
+
+Process Autoridad {
+
+	while (true) {
+		mesa.siguiente()
+	}
+}
+
+Process Persona [id: 0..N-1] {
+
+	int edad = ?
+	bool embarazada = ?
+	
+	Mesa.pedir(id, edad, embarazada)
+	Votar()
+	Mesa.salir()
+}
+
+Monitor Mesa {
+	
+	colaOrdenada fila
+	cond espera
+	cond termino
+	cond turno[N]
+	int idAux = ?
+	int esperando = 0
+
+	Porcedure pedir (id, edad: in int, embarazada: in bool) {
+		
+		fila.insertar(id, edad, embarazada)
+		esperando++
+		signal(espera)
+		wait(turno[id])
+	}
+
+	Procedure siguiente () {
+		if (esperando == 0) {
+			wait(espera)
+		} else {
+			esperando--
+			fila.sacar(idAux)
+			signal(turno[idAux])
+			wait(termino)
+		}
+	}
+
+	Procedure salir () {
+		signal(termino)
+	}
+}

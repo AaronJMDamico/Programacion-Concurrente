@@ -1,0 +1,106 @@
+Fecha - 14/05/2025
+
+1) 
+
+Resolver con SEMÁFOROS el siguiente problema. Se tiene un vector A de 1.000.000 de caracteres, del cual se debe
+obtener la cantidad de veces que aparecen los caracteres "F" y "C", utilizando 4 procesos Worker. Al terminar todos
+los procesos deben imprimir la cantidad de veces que aparece cada una de esas dos letras (F y C). Nota: maximizar
+concurrencia; únicamente se pueden usar los 4 procesos Worker.
+
+Alta paja
+
+2) 
+
+Resolver con SEMÁFOROS la siguiente situación. Existen B barcos areneros que deben descargar su contenido en
+una playa. Los barcos se descargan de a uno por vez, y de acuerdo con orden de llegada. Una vez que el barco llegó, 
+espera a que le llegue su turno para comenzar a descargar su contenido, y luego se retira. Nota: sólo se pueden usar
+los procesos que representen a los barcos; cada barco descarga sólo una vez; suponga que existe la función
+Descargar() que simula que el barco está descargando su contenido en la playa.
+
+sem mutex = 1
+sem turno[B] = ([B] 0)
+int esperando = 0
+queue cola
+bool libre = true
+
+Process Barco[id: 0.. B-1] {
+	int aux = ?
+	
+	P(mutex)
+	if (not libre) {
+		push(cola, id)
+		esperando++
+		V(mutex)
+		P(turno[id])
+	} else {
+		libre = false
+	}
+	V(mutex)
+	Descargar()
+	P(mutex)
+	if (esperando > 0) {
+		libre = true
+	} else {
+		pop(cola, aux)
+		V(turno[aux])
+		V(mutex)
+	}
+}
+
+La hice así nomás (CUIDADO)
+
+3) 
+
+Resolver con MONITORES el siguiente problema. En una acopiadora de cereales hay 2 empleados, uno para 
+atender a los camiones de maíz y otro para los de girasol. Hay 30 camiones que llegan para descargar su carga
+(15 de maíz y 15 de girasol), cuando el camión llega espera hasta que el empleado correspondiente l avise que puede
+descargar el cereal. Cada empleado hace descargar los camiones que le corresponden de a uno a la vez y de acuerdo
+con orden de llegada. Nota: maximizar concurrencia; el camión sabe que tipo de cereal lleva; todos los procesos
+deben terminar.
+
+Process Empleado [id: 1, 2] {
+	int cant = 0
+	bool termine = false
+
+	while (not termine) {
+		Acopiadora[id].darPaso()
+		cant++
+		if (cant == 15) {
+			termine = true
+		}
+	}
+}
+
+Process Camiones [id: 0..29] {
+	int tipo = random(1, 2)
+	
+	Acopiadora[tipo].llegar()
+	Descargar()
+	Acopiadora[tipo].irse()
+}
+
+Monitor Acopiadora[1, 2] {
+	int camiones = 0
+	cond noHay
+	cond espera
+	cond descarga
+
+	Procedure llegar() {
+		camiones++
+		signal(noHay)
+		wait(espera)
+	}
+	
+	Procedure darPaso() {
+		if (camiones == 0) {
+			wait(noHay)
+		}
+		camiones--
+		signal(espera)
+		wait(descarga)
+	}
+	
+	Procedure irse() {
+		signal(descarga)
+	}
+}

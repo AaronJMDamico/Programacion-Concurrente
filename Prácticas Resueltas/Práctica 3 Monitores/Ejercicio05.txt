@@ -1,0 +1,86 @@
+5) b)
+
+Monitor Corralon {
+	cola empLibres
+	cond esperaCli
+	int esperando = 0
+	int cantLibres = 0
+
+	Procedure llegada (idEmp: out int) {
+		if (cantLibres == 0) {
+			esperando++
+			wait(esperaCli)
+		} else {
+			cantLibres--
+		}
+		pop(empLibres, idEmp)
+	}
+	
+	Procedure próximo (idEmp: in int) {
+		push(empLibres, idEmp)
+		if (esperando > 0) {
+			esperando--
+			signal(esperaCli)
+		} else {
+			cantLibres++
+		}
+	}
+}
+
+Monitor Mostrador [id: 0..E-1] {
+	cond vcCliente, vcEmpleadao
+	text lista, comprobante
+	bool listo = false
+
+	Procedure atención (l: in text, c: out text) {
+		lista = l
+		listo = true
+		signal(vcEmpleado)
+		wait(vcCliente)
+		c = comprobante
+		signal(vcEmpleado)
+	}
+
+	Procedure esperarLista (l: out text) {
+		if (not listo) {
+			wait (vcEmpleado)
+		}
+		l = lista
+	}
+
+	Procedure darComprobante (c: in text) {
+		comprobante = c
+		signal(vcCliente)
+		wait (vcEmpleado)
+		listo = false
+	}
+}
+
+
+Process Cliente [id: 0..N-1] {
+	text lista, comprobante
+
+	Corralon.llegada(id)
+	Mostrador.atencion(lista, comprobante)
+}
+
+Process Empleado [id: 0..E-1] {
+	text lista, comprobante
+
+	while (true) {
+		Corralon.proximo(id)
+		Mostrador[id].esperarLista(lista)
+		comprobante = crearComprobante(lista)
+		Mostrador[id].darComprobante(comprobante)
+	}
+}
+
+a) 
+
+Para el A es solo un empleado con un solo mostrador
+
+c) 
+
+Habría que agregar un bool termine en próximo() y while(), más un contador
+de clientes para verificar clientes > N. Proximo() debería devolver termine
+y luego un if(termine) antes de todo lo que hace el empleado =)

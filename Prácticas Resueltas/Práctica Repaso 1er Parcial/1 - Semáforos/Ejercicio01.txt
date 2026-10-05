@@ -1,0 +1,114 @@
+1a) 
+
+En una estación de trenes, asisten P personas que deben realizar una carga de su tarjeta SUBE 
+en la terminal disponible. La terminal es utilizada en forma exclusiva por cada persona de acuerdo 
+con el orden de llegada. Implemente una solución utilizando únicamente procesos Persona. 
+Nota: la función UsarTerminal() le permite cargar la SUBE en la terminal disponible.
+
+sem mutex = 1
+sem mutexCola = 1
+sem turno[N] = ([N] 0)
+queue cola
+bool libre = true
+int idAux = ?
+int esperando = 0
+
+Process Persona [id: 0..N-1] {
+
+	p(mutex)
+	if (not libre) {
+		esperando++
+		push (cola, id)
+		v(mutexCola)
+		v(mutex)
+		p(turno[id])
+	} else {
+		libre = false
+		v(mutex)
+	}
+	UsarTerminal()
+	p(mutex)
+	if (esperando > 0) {
+		p(mutexCola)
+		esperando--
+		pop (cola, idAux)
+		v(mutexCola)
+		v(mutex)
+		v(turno[id])
+	} else {
+		libre = true
+		v(mutex)
+	}
+}
+
+1)b)
+
+Resuelva el mismo problema anterior pero ahora considerando que hay T terminales disponibles.
+Las personas realizan una única fila y la carga la realizan en la primera terminal que se libera.
+Recuerde que sólo debe emplear procesos Persona. Nota: la función UsarTerminal(t) le permite
+cargar la SUBE en la terminal t.
+
+sem mutex = 1
+sem mutexCola = 1
+sem mutexTerminal = 1
+sem turno[N] = ([N] 0)
+int miTerminal = ?
+int idAux = ?
+int esperando = 0
+int terminalesLibres = 5
+queue colaPersonas
+queue colaTerminales
+
+Process Persona [id: 0..N-1] {
+	
+	p(mutex)
+	if (terminalesLibres < 0) {
+		v(mutex)
+		p(mutexCola)
+		esperando++
+		push (colaPersonas, id)
+		v(mutexCola)
+		p(turno[id])
+		pop(colaTerminales, miTerminal)
+	} else {
+		v(mutex)
+		p(mutexTerminal)
+		pop(colaTerminales, miTerminal)
+		terminalesLibres--
+		v(mutexTerminal)
+	}
+	UsarTerminal(miTerminal)
+	p(mutex)
+	if (esperando > 0) {
+		p(mutexCola)
+		esperando--
+		pop(colaPersonas, idAux)
+		v(mutexCola)
+		v(mutex)
+		push(colaTerminales, miTerminal)
+		v(turno[id])
+	} else {
+		p(mutexTerminal)
+		terminalesLibres++
+		push(colaTerminales, miTerminal)
+		v(mutexTerminal)
+		v(mutex)
+	}
+}
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

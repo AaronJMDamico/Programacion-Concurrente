@@ -1,0 +1,42 @@
+2)
+
+Implemente una solución para el siguiente problema. Un sistema debe validar un conjunto de 10000
+transacciones que se encuentran disponibles en una estructura de datos. Para ello, el sistema dispone
+de 7 workers, los cuales trabajan colaborativamente validando de a 1 transacción por vez cada uno.
+Cada validación puede tomar un tiempo diferente y para realizarla los workers disponen de la
+función Validar(t), la cual retorna como resultado un número entero entre 0 al 9. Al finalizar el
+procesamiento, el último worker en terminar debe informar la cantidad de transacciones por cada
+resultado de la función de validación. Nota: maximizar la concurrencia.
+
+sem mutexDatos = 1
+sem mutexWorker = 1
+int transacciones = 1000
+int workerDormido = 0
+int total = 0
+queue colaDatos
+
+Process Worker [1..7] {
+	
+	bool continuar = true
+	int cant = 0
+	
+	while (not continuar) {
+		p(mutexDatos)
+		if (transacciones > 0) {
+			pop(colaDatos, t)
+			transacciones--
+			v(mutexDatos)
+			cant += Validar(t)
+		} else {
+			v(mutexDatos)
+			p(mutexWorker)
+			total += cant
+			workerDormido++
+			if (workerDormido == 7){
+				print(total)
+			}
+			v(mutexWorker)
+			continuar = false
+		}
+	}
+}

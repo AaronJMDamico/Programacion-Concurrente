@@ -1,0 +1,52 @@
+11)
+
+En un vacunatorio hay un empleado de salud para vacunar a 50 personas. El empleado
+de salud atiende a las personas de acuerdo con el orden de llegada y de a 5 personas a la
+vez. Es decir, que cuando está libre debe esperar a que haya al menos 5 personas
+esperando, luego vacuna a las 5 primeras personas, y al terminar las deja ir para esperar
+por otras 5. Cuando ha atendido a las 50 personas el empleado de salud se retira.
+Nota: todos los procesos deben terminar su ejecución; suponga que el empleado tiene una
+función VacunarPersona() que simula que el empleado está vacunando a UNA persona.
+
+sem mutexCola = 1
+sem mutexDespertar =
+int esperando = 0
+int idAux = ?
+queue cola
+
+Process Persona [id: 1..50] { 
+	p(mutexCola)
+	esperando++
+	push(cola, id)
+	v(mutexCola)
+	if (esperando == 5) {
+		v(mutexDespertar)
+	}
+	p(turno[id])
+}
+
+Process Empleado { 
+	while (not termine) {
+		p(mutexCola)
+		if (esperando >= 5) {
+			for 1 to 5 {
+				esperando--
+				pop(cola, idAux)
+				v(mutexCola)
+				v(turno[idAux])
+				VacunarPersona()
+				vacunados++
+			}
+			if (vacunados == 50) {
+				termine = true
+			}
+		} else {
+			v(mutexCola)
+			p(mutexDespertar)
+		}
+	}
+}
+
+Algunos ponen que las 5 primeras personas salen y van a otro p(turno[id]) y el empleado las atiende
+aparte a esas 5 personas. Yo directamente si hay 5 esperando ya las atiendo, y si hay mas de 5 
+esperando después sigue atendiendo.

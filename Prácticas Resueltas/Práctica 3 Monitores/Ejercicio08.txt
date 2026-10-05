@@ -1,0 +1,73 @@
+8)
+
+En un entrenamiento de fútbol hay 20 jugadores que forman 4 equipos (cada jugador conoce
+el equipo al cual pertenece llamando a la función DarEquipo()). Cuando un equipo está listo
+(han llegado los 5 jugadores que lo componen), debe enfrentarse a otro equipo que también
+esté listo (los dos primeros equipos en juntarse juegan en la cancha 1, y los otros dos equipos
+juegan en la cancha 2). Una vez que el equipo conoce la cancha en la que juega, sus jugadores
+se dirigen a ella. Cuando los 10 jugadores del partido llegan a la cancha, comienza el partido;
+juegan durante 50 minutos y, al terminar, todos los jugadores del partido se retiran (no es
+necesario que esperen para salir).
+
+Process Jugador [id: 1..20] {
+	
+	int idEquipo = ?
+	int idCancha = ?
+
+	DarEquipo(idEquipo)
+	Equipo[idEquipo].listo(idCancha)
+	Cancha[idCancha].llegar()
+	Jugar() // Dura 50 minutos y se va
+}
+
+
+Monitor Equipo [id: 1..4] {
+
+	cond espera
+	int llegaron = 0
+	int cancha = ?
+
+	Procedure listo(idCancha: out int) {
+	
+		llegaron++
+		if (llegaron == 5) {
+			Armador.pedirCancha(idCancha)
+			cancha = idCancha
+			signalall(espera)
+			
+		} else {
+			wait(espera)
+			idCancha = cancha
+		}
+}
+
+Monitor Armador {
+	
+	int llegaron = 0
+
+	Procedure pedirCancha(idCancha: out int)
+		
+		llegaron++
+		if (llegaron <= 2) {
+			idCancha = 1
+		} else {
+			idCancha = 2
+		}
+	}
+}
+
+Monitor Cancha [id: 1, 2] {
+
+	Procedure llegar() {
+		
+		llegaron++
+		if (llegaron = 10) {
+			signalall(espera)
+		} else {
+			wait(espera)
+		}
+	}
+}
+
+Nanananana creo que me re zarpe con la solución, muy genio
+Me puse re contento jasjdajsdjasdj

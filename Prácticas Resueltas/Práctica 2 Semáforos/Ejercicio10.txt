@@ -1,0 +1,83 @@
+10)
+
+A una cerealera van T camiones a descargarse trigo y M camiones a descargar maíz. Sólo
+hay lugar para que 7 camiones a la vez descarguen, pero no pueden ser más de 5 del mismo
+tipo de cereal.
+
+a) Implemente una solución que use un proceso extra que actúe como coordinador
+entre los camiones. El coordinador debe atender a los camiones según el orden de
+llegada. Además, debe retirarse cuando todos los camiones han descargado.
+
+sem mutexCola = 1
+sem mutexTrigo = 5
+sem mutexMaiz = 5
+sem mutexTotal = 7
+sem encolados = 0
+sem turno[] = ([total] 0)
+int total = T + M
+int cant = 0
+int idAux = ?
+queue cola
+
+Process CamiónTrigo [id: 1.. T] {
+	p(mutexCola)
+	push(cola, id)
+	v(encolados)
+	v(mutexCola)
+	p(turno[id])
+	p(mutexTrigo)
+	Descargar()
+	v(mutexTrigo)
+	v(mutexTotal)
+}
+
+Process CamiónMaíz [id: 1..M] {
+	p(mutexCola)
+	push(cola, id)
+	v(encolados)
+	v(mutexCola)
+	p(turno[id])
+	p(mutexMaiz)
+	Descargar()
+	v(mutexMaiz)
+	v(mutexTotal)
+}
+
+Process Coordinador {
+	while (not termine) {
+		p(encolados)
+		p(mutexCola)
+		pop(cola, idAux)
+		v(mutexCola)
+		p(mutexTotal)
+		v(turno[idAux])
+		cant++
+		if (cant == total) {
+			termine = true
+		}
+	}
+}
+
+b) Implemente una solución que no use procesos adicionales (sólo camiones). No
+importa el orden de llegada para descargar. Nota: maximice la concurrencia.
+
+sem mutexTrigo = 5
+sem mutexMaiz = 5
+sem mutexTotal = 7
+
+Process CamiónTrigo [id: 1.. T] {
+	p(mutexTotal)
+	p(mutexTrigo)
+	Descargar()
+	v(mutexTrigo)
+	v(mutexTotal)
+}
+
+Process CamiónMaíz [id: 1..M] {
+	p(mutexTotal)
+	p(mutexMaiz)
+	Descargar()
+	v(mutexMaiz)
+	v(mutexTotal)
+}
+

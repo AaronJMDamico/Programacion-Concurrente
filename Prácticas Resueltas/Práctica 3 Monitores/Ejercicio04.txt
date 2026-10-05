@@ -1,0 +1,33 @@
+4)
+
+Process Vehículo [id: 1..N] {
+	int peso = ?
+	
+	Puente.pasar(id, peso)
+	// pasa el puente
+	Puente.salir(peso)
+}
+
+Monitor Puente {
+	int esperando = 0
+	int max = 0
+	cond turno
+	bool libre = true
+
+	Procedure pasar(peso: in int) {
+		if (max + peso <= 5000) {
+			max += peso
+		} else {
+			esperando++
+			wait(turno)
+		}
+	}
+
+	Procedure salir(peso: in int) {
+		max-= peso
+		if (esperando > 0) {
+			esperando--
+			signal(turno)
+		}
+	}
+}

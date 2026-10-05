@@ -1,0 +1,151 @@
+Fecha - 14/05/2025
+
+1) 
+
+Resolver con SEMÁFOROS el siguiente problema. Se tiene un vector A de 1.000.000 de números, del cual se debe
+obtener el promedio de sus valores utilizando 10 procesos Worker. Al terminar todos los procesos deben imprimir el 
+resultado. Nota: maximizar concurrencia; únicamente se pueden usar los 10 procesos Worker.
+
+W1 	(1 * 100.000) = 0 	a (100.000-1) = 99.999
+W2	(2 * 100.000) = 100.000 a (200.000-1) = 199.000
+W3	(3 * 100.000) = 200.000 a (300.000-1) = 299.999
+WN	 …	      = …	a …	      = … 
+
+int N = 1.000.000
+int M = N/10
+array A = ([N] ?)
+sem mutexTotal = 1
+sem esperar = 0
+int total = 0
+int resultado = 0
+int terminaron = 0
+
+Process Worker [id: 1..10] {
+	int suma = 0
+	for i = (id-1)*M; i < (id*M)-1; i++ {
+		 suma += A[id]
+	}
+	p(mutexTotal)
+	total+=suma
+	terminaron++
+	if (terminaron == 10) {
+		resultado = total/N
+		for 1 to 10 {
+			v(esperar)
+		}
+	}
+	v(mutexTotal)
+	p(esperar)
+	print(resultado)
+}
+
+2) 
+
+Resolver con SEMÁFOROS la siguiente situación. A una acopiadora de cereales llegan 20 camiones, que deben
+descargar su cereal. Los camiones se descargan de a uno por vez, y de acuerdo con orden de llegada. Una vez que el 
+camión llegó, espera a que llegue su turno para comenzar a descargar su cereal. Nota: sólo se pueden usar procesos
+que representen a los camiones; cada camión descarga sólo una vez; la descarga del camión se simula por medio de 
+la función Descargar() llamada por el camión.
+
+sem mutexCola = 1
+sem turno[20] = ([20] 0)
+int esperando = 0
+int idAux = ?
+bool libre = true
+
+Process Camión [id: 0..19] {
+	p(mutexCola)
+	if (not libre) {
+		push(cola, id)
+		esperando++
+		v(mutexCola)
+		p(turno[id])
+	} else {
+		libre = false
+		v(mutexCola)
+	}
+	Descargar()
+	p(mutexCola)
+	if (esperando > 0) {
+		pop(cola, idAux)
+		esperando--
+		v(mutexCola)
+		v(turno[idAux])
+	} else {
+		libre = true
+		v(mutexCola)
+	}
+}
+
+3) 
+
+Resolver con MONITORES el siguiente problema. En una cátedra hay un profesor, un auxiliar y 100 alumnos.
+Cada alumno continuamente hace consultas que pueden ser de dos tipos: TEÓRICAS o PRÁCTICAS; cada vez que 
+tiene una consulta para hacer se la envía por mail al docente correspondiente, y espera a que este le envíe la respuesta.
+El profesor sólo atiende consultas TEÓRICAS y el auxiliar sólo PRÁCTICAS; cada uno resuelve sus
+consultas de acuerdo con orden de llegada. Nota: maximizar concurrencia; el alumno sabe de que tipo es cada
+consulta; los procesos NO deben terminar.
+
+Process Profesor {
+	str email = ?
+	text respuesta
+	int id = ?
+ 
+	while (true) {
+		Consulta[1].resolverConsuta(id, email)
+		respuesta = responder(email)
+		Consulta[1].darRespuesta(id, respuesta)
+	}
+}
+
+Process Auxiliar {
+	str email = ?
+	text respuesta
+	int id = ?
+ 
+	while (true) {
+		Consulta[2].resolverConsuta(id, email)
+		respuesta = responder(email)
+		Consulta[2].darRespuesta(id, respuesta)
+	}
+}
+
+Process Alumno [id: 0..99] {
+	int tipo = ? // 1 = TEÓRICAS, 2 = PRÁCTICAS
+	str email = ?
+	text respuesta
+	
+	while (true) {
+		tipo = random(1,2) // Van cambiando
+		Consulta[tipo].hacerConsulta(id, email)
+		Consulta[tipo].recibirRespuesta(respuesta)
+	}
+}
+
+Monitor Consulta[1, 2] {
+	int consultas = 0
+
+	Procedure resolverConsuta(id: out int, eamil: out str){
+		if (consultas == 0) {
+			wait(noHay)
+		}
+		pop(cola, idAux, emailAux)
+		consultas--
+	}
+	
+	Procedure darRespuesta(idAux: in int, res: in text){
+		respuestas[idAux] = res
+		signal(espera)
+	}
+
+	Procedure hacerConsulta(id: in int) {
+		push(cola, id, email)
+		consultas++
+		signal(noHay)
+		wait(espera)
+	}
+
+	Procedure recibirRespuesta(id: in int, res: out text) {
+		res = resultados[id]
+	}
+}
