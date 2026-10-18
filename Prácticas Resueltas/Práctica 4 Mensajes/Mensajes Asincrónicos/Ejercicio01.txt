@@ -1,0 +1,97 @@
+1) Suponga que N clientes llegan a la cola de un banco y que serán atendidos por sus
+empleados. Analice el problema y defina qué procesos, recursos y canales/comunicaciones
+serán necesarios/convenientes para resolverlo. Luego, resuelva considerando las siguientes
+situaciones.
+
+a) Existe un único empleado, el cual atiende por orden de llegada.
+
+chan espera (int, text)
+chan termine[N] (text)
+
+Process Cliente [id: 0..N-1] {
+	text consulta
+	send espera(id, consulta)
+	receive termine[id](consulta)
+	// se va
+}
+
+Process Empleado {
+	int idAux = ?
+	text resultado, consulta
+	while (true) {
+		receive espera(idAux, consulta)
+		resultado = resolver(consulta)
+		send termine[idAux](resultado)
+	}
+}
+
+b) Ídem a) pero considerando que hay 2 empleados para atender, ¿qué debe
+modificarse en la solución anterior?
+
+chan espera (int, text)
+chan termine[N] (text)
+
+Process Cliente [id: 0..N-1] {
+	text consulta
+	send espera(id, consulta)
+	receive termine[id](consulta)
+	// se va
+}
+
+Process Empleado [id: 1, 2] { // esta sería la única modificación
+	int idAux = ?
+	text resultado, consulta
+	while (true) {
+		receive espera(idAux, consulta)
+		resultado = resolver(consulta)
+		send termine[idAux](resultado)
+	}
+}
+
+Sólo se debería usar un canal para cada empleado si la persona manda el reporte a UN empleado en
+particular (pero no es este el caso).
+
+c) Ídem b) pero considerando que, si no hay clientes para atender, los empleados
+realizan tareas administrativas durante 15 minutos. ¿Se puede resolver sin usar
+procesos adicionales? ¿Qué consecuencias implicaría?
+
+chan Espera(int, text)
+chan Pedido(int)
+cahn Siguiente[2](int, text)
+chan Resultado[N](text)
+
+Process Cliente [id: 0..N-1] {
+	text consulta, resultado
+	send Espera(id, consulta)
+	receive Resultado[id](resultado)
+	// se va
+}
+
+Process Empleado [id: 1, 2] {
+	text consulta, resultado
+	int idCli = ?
+	while (true) {
+		send Pedido(id)
+		receive Siguiente[id](idCli, consulta)
+		if reporte <> "VACIO" {
+			resultado = resolver(consulta)
+			Resultado[idCli](resultado) // le avisa que termino
+		} else {
+			delay (900) // realiza tareas 15 minutos
+		}
+	}
+}
+
+Process Coordinador {
+	text consulta
+	int idEmp, idCli = ?
+	while (true) {
+		receive Pedido(idEmp)
+		if empty(Espera) {
+			reporte = "VACIO"
+		} else {
+			receive Espera(idCli, consulta)
+		}
+		send Siguiente[idEmp](idCli, consulta)
+	}
+}
