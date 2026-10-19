@@ -1,6 +1,54 @@
 2) Se desea modelar el funcionamiento de un banco en el cual existen 5 cajas para realizar
-pagos. Existen P clientes que desean hacer un pago. Para esto, cada uno selecciona la caja
+pagos. Existen C clientes que desean hacer un pago. Para esto, cada uno selecciona la caja
 donde hay menos personas esperando; una vez seleccionada, espera a ser atendido. En cada
 caja, los clientes son atendidos por orden de llegada por los cajeros. Luego del pago, se les
 entrega un comprobante. Nota: maximizar la concurrencia.
 
+chan Espera()
+chan PedirPago(int, int)
+chan PedirCaja(int, int)
+chan Resultados[C](text)
+chan PedidoTerminado(int)
+
+Process Cliente [id: 0..C] {
+	text comprobante
+	int pago
+	
+	send PedirPago(id, pago)
+	send Espera()
+	recieve Resultados[id](comprobante)
+}
+
+Process Caja [id: 0..4] {
+	text resultado
+	int pagoAct
+	int idAux
+
+	while (true) {
+		receive PedirCaja[id](idAux, pagoAct)
+		resultado = recibirPago(pagoAct)
+		send Resultados[idAux](resultado)
+		send PedidoTermiado(id)
+	}
+}
+
+Process Coordinador {
+	int cantPedidos[5] = ([5] 0)
+	int idAux = ?
+	int idCaja = ?
+	int pagoAct = ?
+	int menorCaja = ?
+	
+	while (true) {
+		receive Espera()
+		if not empty (PedidoTerminado) {
+			receive PedidoTerminado(idCaja)
+			cantPedidosCaja[idCaja]--
+		} else {
+			receive PedidosPago(idAux, pagoAct)
+			menorCaja = cantPedidosCaja[].traerCajaMenor()
+			cantPedidosCaja[menorCaja]++
+			send PedirCaja[menorCaja](idAux, pagoAct)
+		}
+	}
+}
