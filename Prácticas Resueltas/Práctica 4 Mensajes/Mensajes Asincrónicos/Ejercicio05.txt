@@ -261,6 +261,6 @@ Process Coordinador {
 	}
 	for 1 to 3 {
 		receive libre()
-		send imprimirDocumento[idImp](0, "TERMINAR")
+		send imprimirDocumento("TERMINAR")
 	}
 }
