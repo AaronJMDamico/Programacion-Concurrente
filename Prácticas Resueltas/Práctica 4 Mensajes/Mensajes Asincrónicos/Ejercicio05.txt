@@ -34,6 +34,7 @@ chan documentoImpreso[N](text)
 chan documentoEnviadoJefe(text)
 chan documentoImpresoJefe(text)
 chan imprimirDocumento(int, text)
+chan libre()
 
 Process Administrativos [id: 0..N-1] {
 	text solicitud, impresion
@@ -87,6 +88,7 @@ que todos los procesos deben terminar su ejecución.
 chan documentoEnviado(int, text)
 chan documentoImpreso[N](text)
 imprimirDocumento(int, text)
+chan libre()
 
 Process Administrativos [id: 0..N-1] {
 	text solicitud, impresion
@@ -136,6 +138,7 @@ chan documentoImpreso[N](text)
 chan documentoEnviadoJefe(text)
 chan documentoImpresoJefe(text)
 chan imprimirDocumento(int, text)
+chan libre()
 
 Process Administrativos [id: 0..N-1] {
 	text solicitud, impresion
@@ -202,10 +205,10 @@ e) Si la solución al ítem d) implica realizar Busy Waiting, modifíquela para 
 Nota: ni los administrativos ni el director deben esperar a que se imprima el documento.
 
 chan documentoEnviado(int, text)
-chan documentoImpreso[N](text)
 chan documentoEnviadoJefe(text)
-chan documentoImpresoJefe(text)
-chan imprimirDocumento(int, text)
+chan imprimirDocumento(text)
+chan libre()
+chan solicitud()
 
 Process Administrativos [id: 0..N-1] {
 	text solicitud, impresion
