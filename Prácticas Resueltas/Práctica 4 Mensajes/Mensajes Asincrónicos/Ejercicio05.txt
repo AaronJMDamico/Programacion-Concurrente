@@ -1,0 +1,263 @@
+5) Resolver la administración de 3 impresoras de una oficina. Las impresoras son usadas por N
+administrativos, los cuales están continuamente trabajando y cada tanto envían documentos
+a imprimir. Cada impresora, cuando está libre, toma un documento y lo imprime, de
+acuerdo con el orden de llegada.
+
+a) Implemente una solución para el problema descrito.
+
+chan documentoEnviado(int, text)
+chan documentoImpreso[N](text)
+
+Process Administrativos [id: 0..N-1] {
+	text solicitud, impresion
+	
+	send documentoEnviado(id, solicitud)
+	receive documentoImpreso[id](impresion)
+}
+
+Process Impresora [id: 0..2] {
+	text solicitud, impresion
+	
+	while (true) {
+		receive documentoEnviado(idAux, solicitud)
+		impresion = imprimir(solicitud)
+		send documentoImpreso[idAux](impresion)
+	}
+}
+
+b) Modifique la solución implementada para que considere la presencia de un director de
+oficina que también usa las impresoras, el cual tiene prioridad sobre los
+administrativos.
+
+chan documentoEnviado(int, text)
+chan documentoImpreso[N](text)
+chan documentoEnviadoJefe(text)
+chan documentoImpresoJefe(text)
+chan imprimirDocumento(int, text)
+
+Process Administrativos [id: 0..N-1] {
+	text solicitud, impresion
+	
+	send documentoEnviado(id, solicitud)
+	receive documentoImpreso[id](impresion)
+}
+
+Process Director {
+	text solicitud, impresion
+	
+	send documentoEnviadoJefe(solicitud)
+	receive documentoImpresoJefe(impresion)
+}
+
+Process Impresora [id: 0..2] {
+	int idAux = ?
+	text solicitud, impresion
+	
+	while (true) {
+		send libre()
+		receive imprimirDocumento(idAux, solicitud)
+		impresion = imprimir(solicitud)
+		if (idAux = -1) {
+			send documentoImpresoJefe(impresion)
+		} else {
+			send documentoImpreso[idAux](impresion)
+		}
+	}
+}
+
+Process Coordinador {
+	int idAux = ?
+	text solicitud
+
+	while (true) { 
+		receive libre()
+		if (not empty (documentoEnviadoJefe)) ->
+			receive documentoEnviadoJefe(solicitud)
+			send imprimirDocumento(-1, solicitud)
+		 (not empty (documentoEnviado)) and (empty (documentoEnviadoJefe)) ->
+			receive documentoEnviado(idAux, solicitud)
+			send imprimirDocumento(idAux, solictud)
+		fi
+	}
+}
+
+c) Modifique la solución (a) considerando que cada administrativo imprime 10 trabajos y
+que todos los procesos deben terminar su ejecución.
+
+chan documentoEnviado(int, text)
+chan documentoImpreso[N](text)
+imprimirDocumento(int, text)
+
+Process Administrativos [id: 0..N-1] {
+	text solicitud, impresion
+	
+	for 1 to 10 {
+		send documentoEnviado(id, solicitud)
+		receive documentoImpreso[id](impresion)
+	}
+}
+
+Process Impresora [id: 0..2] {
+	bool termine = false
+	text solicitud, impresion
+	
+	 while (not termine) {
+		receive imprimirDocumento(idAux, solicitud)
+		if (solicitud <> "TERMINAR") {
+			impresion = imprimir(solicitud)
+			send documentoImpreso[idAux](impresion)
+		} else {
+			termine = true
+		}
+	}
+}
+
+Process Coordinador {
+	int documentos = N * 10
+	int idAux = ?
+	text solicitud
+
+	while (documentos > 0) {
+		receive libre()
+		receive documentoEnviado(idAux, solicitud)
+		send imprimirDocumento(idAux, solicitud)
+		documentos--
+	}
+	for 1 to 3 {
+		imprimirDocumento(0, "TERMINAR")
+	}
+}
+
+d) Modifique la solución (b) considerando que tanto el director como cada administrativo
+imprimen 10 trabajos y que todos los procesos deben terminar su ejecución.
+
+chan documentoEnviado(int, text)
+chan documentoImpreso[N](text)
+chan documentoEnviadoJefe(text)
+chan documentoImpresoJefe(text)
+chan imprimirDocumento(int, text)
+
+Process Administrativos [id: 0..N-1] {
+	text solicitud, impresion
+	
+	for 1 to 10 {
+		send documentoEnviado(id, solicitud)
+		receive documentoImpreso[id](impresion)
+	}
+}
+
+Process Director {
+	text solicitud, impresion
+	
+	for 1 to 10 {
+		send documentoEnviadoJefe(solicitud)
+		receive documentoImpresoJefe(impresion)
+	}
+}
+
+Process Impresora [id: 0..2] {
+	bool termine = false
+	int idAux = ?
+	text solicitud, impresion
+	
+	while (not termine) {
+		send libre()
+		receive imprimirDocumento(idAux, solicitud)
+		if (solicitud <> "TERMINAR") {
+			impresion = imprimir(solicitud)
+			if (idAux = -1) {
+				send documentoImpresoJefe(impresion)
+			} else {
+				send documentoImpreso[idAux](impresion)
+			}
+		} else {
+			termine = true
+		}
+	}
+}
+
+Process Coordinador {
+	int documentos = N * 10 + 10
+	int idAux = ?
+	text solicitud
+
+	while (documentos < 10) { 
+		receive libre()
+		if (not empty (documentoEnviadoJefe)) ->
+			receive documentoEnviadoJefe(solicitud)
+			send imprimirDocumento(-1, solicitud)
+		 (not empty (documentoEnviado)) and (empty (documentoEnviadoJefe)) ->
+			receive documentoEnviado(idAux, solicitud)
+			send imprimirDocumento(idAux, solictud)
+		fi
+		documentos--
+	}
+	for 1 to 3 {
+		receive libre()
+		send imprimirDocumento[idImp](0, "TERMINAR")
+	}
+}
+
+e) Si la solución al ítem d) implica realizar Busy Waiting, modifíquela para evitarlo.
+Nota: ni los administrativos ni el director deben esperar a que se imprima el documento.
+
+chan documentoEnviado(int, text)
+chan documentoImpreso[N](text)
+chan documentoEnviadoJefe(text)
+chan documentoImpresoJefe(text)
+chan imprimirDocumento(int, text)
+
+Process Administrativos [id: 0..N-1] {
+	text solicitud, impresion
+	
+	for 1 to 10 {
+		send documentoEnviado(solicitud)
+		send solicitud()
+	}
+}
+
+Process Director {
+	text solicitud, impresion
+	
+	for 1 to 10 {
+		send documentoEnviadoJefe(solicitud)
+		send solicitud()
+	}
+}
+
+Process Impresora [id: 0..2] {
+	bool termine = false
+	text solicitud, impresion
+	
+	while (not termine) {
+		send libre()
+		receive imprimirDocumento(solicitud)
+		if (solicitud <> "TERMINAR") {
+			impresion = imprimir(solicitud)
+		} else {
+			termine = true
+		}
+	}
+}
+
+Process Coordinador {
+	int documentos = N * 10 + 10
+	text solicitud
+
+	while (documentos < 10) {
+		receive solicitud()
+		receive libre()
+		if (not empty (documentoEnviadoJefe)) ->
+			receive documentoEnviadoJefe(solicitud)
+			send imprimirDocumento(solicitud)
+		 (not empty (documentoEnviado)) and (empty (documentoEnviadoJefe)) ->
+			receive documentoEnviado(solicitud)
+			send imprimirDocumento(solictud)
+		fi
+		documentos--
+	}
+	for 1 to 3 {
+		receive libre()
+		send imprimirDocumento[idImp](0, "TERMINAR")
+	}
+}

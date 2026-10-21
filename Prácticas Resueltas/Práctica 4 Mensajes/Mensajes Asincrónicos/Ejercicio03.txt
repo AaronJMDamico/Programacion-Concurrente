@@ -12,16 +12,56 @@ cocina y se lo entrega directamente al cliente correspondiente.
 
 Nota: maximizar la concurrencia.
 
-
+chan pedidosCliente(int, text)
+chan entregasComida[C](text)
+chan vendedoresListo(int)
+chan siguienteVendedor[3](int, text)
+chan pedidosCocina(int, text)
 
 Process Cliente [id: 0..C-1] {
-	
+	text orden, plato
+
+	send pedidosCliente(id, orden)
+	receive entregasComida[id](plato)
 }
 
-Process Venderos [id: 0..2] {
-	
+Process Coordinador {
+	int idCli, idVen
+	text orden
+
+	while (true) {
+		receive vendedoresListo(idVen)
+		if (empty(pedidosCliente)) {
+			send siguienteVendedor[idVen](-1, "")  // manda que no hay nada
+		} else {
+			receive pedido(idCli, orden)
+			send siguiente[idVen](idCli, orden)
+		}
+	}
+}
+
+Process Vendedores [id: 0..2] {
+	int idCli
+	text orden
+
+	while (true) {
+		send vendedoresListo(id)
+		receive siguienteVendedor[id](idCli, orden)
+		if (idCli <> -1) {
+			send pedidosCocina(idCli, orden)
+		} else {
+			delay (random(60, 180) // espera entre 1 y 3 minutos
+		}
+	}
 }
 
 Process Cocineros [id: 0, 1] {
+	int idCli = ?
+	text orden, plato
 	
+	while (true) {
+		receive pedidosCocina(idCli, orden)
+		plato = cocinar(orden)
+		send entregasComida[idCli](plato)
+	}
 }
