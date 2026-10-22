@@ -1,0 +1,109 @@
+1) Suponga que existe un antivirus distribuido que se compone de R procesos robots
+Examinadores y 1 proceso Analizador. Los procesos Examinadores están buscando
+continuamente posibles sitios web infectados; cada vez que encuentran uno avisan la
+dirección, esperan la respuesta del Analizador, y luego continúan buscando. El proceso
+Analizador se encarga de hacer todas las pruebas necesarias con cada uno de los sitios
+encontrados por los robots para determinar si están o no infectados, para luego responderle
+al Examinador.
+
+a) Analice el problema y defina qué procesos, recursos y comunicaciones serán
+necesarios/convenientes para resolverlo.
+
+b) Implemente una solución con PMS donde el Analizador no considere el orden
+de los pedidos de los Examinadores.
+
+Process Examinador [id: 0..E-1] {
+	text url, res
+
+	url = buscarSitio()
+	Analizador!reporteSitio(url, id)
+	Analizador?respuesta(res)
+}
+
+Process Analizador {
+	int idExa = ?
+	text url, res
+	
+	while (true) {
+		Examinador[*]?reporteSitio(url, idExa)
+		res = analizarSitio(url)
+		Examinador[idExa]!respuesta(res)
+	}
+}
+
+c) Implemente una solución con PMS donde el Analizador sí considere el orden de
+los pedidos de los Examinadores.
+
+Process Examinador [id: 0..E-1] {
+	text url, res
+
+	url = buscarSitio()
+	Admin!reporteSitio(url, id)
+	Analizador?respuesta(res)
+}
+
+Process Analizador {
+	int idExa = ?
+	text url, res
+	
+	while (true) {
+		Admin!libre()
+		Admin?pedidoSitio(url, idExa)
+		res = analizarSitio(url)
+		Examinador[idExa]!respuesta(res)
+	}
+}
+
+Process Admin {
+	queue Fila
+	text ulrAux
+	
+	while (true) {
+		do Examinador[*]?reporteSitio(urlAux, idExa) -> 
+			push(Fila, urlAux, idExa)
+		□ not empty(Fila); Analizador?libre() ->
+			pop(Fila, urlAux, idExa)
+			Analizador!pedidoSitio(urlAux, idExa)
+		od
+	}
+}
+
+d) Si los Examinadores no deben esperar la respuesta del Analizador, ¿cambiaría
+algo de la solución al inciso b)? ¿por qué?
+
+Process Examinador [id: 0..E-1] {
+	text url, res
+
+	url = buscarSitio()
+	Admin!reporteSitio(url, id)
+}
+
+Process Analizador {
+	int idExa = ?
+	text url, res
+	
+	while (true) {
+		Admin!libre()
+		Admin?pedidoSitio(url, idExa)
+		res = analizarSitio(url)
+	}
+}
+
+Process Admin {
+	queue Buffer
+	text ulrAux
+	
+	while (true) {
+		do Examinador[*]?reporteSitio(urlAux, idExa) -> 
+			push(Buffer, urlAux, idExa)
+		□ not empty(Buffer); Analizador?libre() ->
+			pop(Buffer, urlAux, idExa)
+			Analizador!pedidoSitio(urlAux, idExa)
+		od
+	}
+}
+
+Solo cambiaria el uso del queue del admin. La Fila se pasaría a usar como Buffer
+ya que sin este Buffer no se podría maximizar la concurrencia, debido a que sino
+el Examinador debe esperar a que el Analizador termine de responder para poder
+continuar examinando.

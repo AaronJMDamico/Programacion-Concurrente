@@ -1,0 +1,139 @@
+3) En un examen final hay N alumnos y P profesores. Cada alumno resuelve su examen, lo
+entrega y espera a que alguno de los profesores lo corrija y le indique la nota. Los
+profesores corrigen los exámenes respetando el orden en que los alumnos van entregando.
+
+a) Considerando que P=1.
+
+Process Alumno [id: 0..N-1] {
+	text examen, res
+
+	examen = resolverExamen()
+	Admin!examenListo(id, examen)
+	Profesor?esperarNota(res)
+}
+
+Process Profesor {
+	text examen, res
+	
+	while (true) {
+		Admin!libre()
+		Admin?pedirExamen(idAlu, examen)
+		res = corregirExamen(examen)
+		Alumno[idAlu]!esperarNora(res)
+	}
+}
+
+Process Admin {
+	queue Pila
+	text examen
+	int idAlu = ?
+	
+	while (true) {
+		do Alumno[*]?examenListo(idAlu, examen) ->
+			push(Pila, idAlu, examen)
+		□ not empty(Pila); Profesor?libre() ->
+			pop(Pila, idAlu, examen)
+			Profesor!pedirExamen(idAlu, examen)
+		od
+	}
+}
+
+b) Considerando que P>1.
+
+Process Alumno [id: 0..N-1] {
+	text examen, res
+
+	examen = resolverExamen()
+	Admin!examenListo(id, examen)
+	Profesor[*]?esperarNota(res)
+}
+
+Process Profesor [id: 0..P-1] {
+	text examen, res
+	
+	while (true) {
+		Admin!libre(id)
+		Admin?pedirExamen(idAlu, examen)
+		res = corregirExamen(examen)
+		Alumno[idAlu]!esperarNora(res)
+	}
+}
+
+Process Admin {
+	queue Pila
+	text examen
+	int idAlu = ?
+	int idPro = ?
+	
+	while (true) {
+		do Alumno[*]?examenListo(idAlu, examen) ->
+			push(Pila, idAlu, examen)
+		□ not empty(Pila); Profesor[*]?libre(idPro) ->
+			pop(Pila, idAlu, examen)
+			Profesor[idPro]!pedirExamen(idAlu, examen)
+		od
+	}
+}
+
+c) Ídem b) pero considerando que los alumnos no comienzan a realizar su examen hasta
+que todos hayan llegado al aula. Nota: maximizar la concurrencia; no generar demora
+innecesaria; todos los procesos deben terminar su ejecución.
+
+Process Alumno [id: 0..N-1] {
+	text examen, res
+
+	Admin!llegue()
+	Admin?empezar()
+	examen = resolverExamen()
+	Admin!examenListo(id, examen)
+	Profesor[*]?esperarNota(res)
+}
+
+Process Profesor [id: 0..P-1] {
+	text examen, res
+	int idAlu = ?
+	bool termine = false
+	
+	while (not termine) {
+		Admin!libre(id)
+		Admin?pedirExamen(idAlu, examen)
+		if (examen <> "TERMINAR") {
+			res = corregirExamen(examen)
+			Alumno[idAlu]!esperarNora(res)
+		} else {
+			termine = true
+		}
+	}
+}
+
+Process Admin {
+	queue Pila
+	text examen
+	int idAlu = ?
+	int idPro = ?
+	int entregados = 0
+	
+	for 1 to N {
+		Alumno[*]?llegue()
+	}
+	for int i = 0 to N-1 {
+		Alumno[i]!empezar()
+	}
+	while (entregados < N) {
+		do Alumno[*]?examenListo(idAlu, examen) ->
+			push(Pila, idAlu, examen)
+		□ not empty(Pila); Profesor[*]?libre(idPro) ->
+			pop(Pila, idAlu, examen)
+			Profesor[idPro]!pedirExamen(idAlu, examen)
+			entregados++
+		od
+	}
+	for 1 to P {
+		Profesor[*]?libre(idPro)
+		Profesor[idPro]!pedirExamen(0, "TERMINAR")
+	}
+}
+
+Pongo entregados++ en el caso de que un profe esta libre ya que si lo pongo en el caso de
+que un alumno entregue, cuando todos los alumnos terminen salgo del while y van quedar
+profesores esperando recibir examenes (Deadlock).
