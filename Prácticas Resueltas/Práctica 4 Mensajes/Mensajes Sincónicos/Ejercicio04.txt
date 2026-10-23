@@ -1,0 +1,103 @@
+4) En una exposición aeronáutica hay un simulador de vuelo (que debe ser usado con
+exclusión mutua) y un empleado encargado de administrar su uso. Hay P personas que
+esperan a que el empleado las deje acceder al simulador de a una por vez, la usan por un
+rato y luego se retiran. Nota: cada persona usa sólo una vez el simulador.
+
+a) Implemente una solución donde el empleado sólo se ocupa de garantizar la exclusión
+mutua (sin importar el orden).
+
+Process Persona [id: 0..P-1] {
+	Empleado!pedirAcceso(id)
+	Empleado?esperarAcceso()
+	delay(180) // 3 minutos
+	Empleado!termine()
+}
+
+Process Empleado {
+	int idAux = ?
+
+	while (true) {
+		Persona[*]?pedirAcceso(idAux)
+		Persona[idAux]!esperarAcceso()
+		Persona[idAux]?termine()
+	}
+}
+
+b) Modifique la solución anterior para que el empleado los deje acceder según el orden de
+su identificador (hasta que la persona i no lo haya usado, la persona i+1 debe esperar).
+
+Process Persona [id: 0..P-1] {
+	Empleado!pedirAcceso()
+	Empleado?esperarAcceso()
+	delay(180) // 3 minutos
+	Empleado!termine()
+}
+
+Process Empleado {
+	int idAux = ?
+
+	for int i = 0 to P-1 {
+		Persona[i]?pedirAcceso()
+		Persona[i]!esperarAcceso()
+		Persona[i]?termine()
+	}
+}
+
+c) Modifique la solución a) para que el empleado considere el orden de llegada para dar
+acceso al simulador.
+
+Process Persona [id: 0..P-1] {
+	Admin!pedirAcceso(id)
+	Empleado?esperarAcceso()
+	delay(180) // 3 minutos
+	Empleado!termine()
+}
+
+Process Empleado {
+	int idAux = ?
+
+	while (true) {
+		Admin!libre()
+		Admin?siguiente(idAux)
+		Persona[idAux]!esperarAcceso()
+		Persona[idAux]?termine()
+	}
+}
+
+Process Admin {
+	queue Fila(int)
+	
+	while (true) {
+		do Persona[*]?pedirAcceso(idAux) ->
+			push(Fila, idAux)
+		□ not empty(Fila); Empleado?libre() ->
+			pop(Fila, idAux)
+			Empleado!siguiente(idAux)
+		od
+	}
+}
+
+Pensaba hacer que toda la gestión de la Fila la haga el empleado pero no se puede ya que al
+tener que esperar a que la persona que accedio termine se genera busy waiting. 
+
+Igualmente trate de adaptar la solución al empleado pero no se puede porque necesita de un 
+persona que termine para dar acceso al siguiente y al inicio no hay personas dentro del
+simulador. Tampoco agregar un nuevo caso de if lo resuelve, ya que la comunicación se limita 
+entre dos procesos, lo que no quiero hacer, y termino en el problema anterior pero con más pasos.
+Tengo que preguntarlo.
+
+Process Empleado {
+	int idAux = ?
+	queue Fila(int)
+
+	while (true) {
+		do Persona[*]?pedirAcceso(idAux) ->
+			push(Fila, idAux)
+		□ not empty(Fila); Persona[*]?termine() ->
+			pop(Fila, idAux)
+			Persona[idAux]!esperarAcceso()
+		od
+	}
+}
+
+Nota: el problema esta acá "□ not empty(Fila); Persona[*]?termine() ->".

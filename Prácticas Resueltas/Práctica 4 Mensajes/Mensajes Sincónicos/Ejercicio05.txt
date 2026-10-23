@@ -1,0 +1,35 @@
+5) En un estadio de fútbol hay una máquina expendedora de gaseosas que debe ser usada por
+E Espectadores de acuerdo con el orden de llegada. Cuando el espectador accede a la
+máquina en su turno, usa la máquina y luego se retira para dejar al siguiente. Nota: cada
+espectador usa la máquina sólo una vez.
+
+Process Espectador [id: 0..E-1] {
+	Admin!pedirAcceso(id)
+	Maquina?esperarAcceso()
+	Maquina!liberarAcceso()
+}
+
+Process Maquina {
+	int idAux = ?
+
+	while (true) {
+		Admin!libre()
+		Admin?recibirPersona(idAux)
+		Espectador[idAux]!esperarAcceso()
+		Espectador[idAux]?liberarAcceso()
+	}
+}
+
+Process Admin {
+	int idAux = ?
+	queue Fila(int)
+
+	while (true) {
+		do Espectador[*]?pedirAcceso(idAux) ->
+			push(Fila, idAux)
+		□ not empty(Fila); Maquina?libre() ->
+			pop(Fila, idAux)
+			Maquina!recibirPersona(idAux)
+		od
+	}
+}
