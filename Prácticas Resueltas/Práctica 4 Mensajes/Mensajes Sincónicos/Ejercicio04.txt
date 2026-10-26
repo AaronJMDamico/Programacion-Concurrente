@@ -101,3 +101,6 @@ Process Empleado {
 }
 
 Nota: el problema esta acá "□ not empty(Fila); Persona[*]?termine() ->".
+
+Edit: Pregunte y si se puede hacer pero la solución se vuelve muy compleja, siempre es más
+recomendable hacer un proceso administrador para respetar el orden de llegada.

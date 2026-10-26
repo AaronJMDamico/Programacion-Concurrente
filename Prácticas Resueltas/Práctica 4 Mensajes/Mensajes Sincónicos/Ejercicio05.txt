@@ -33,3 +33,6 @@ Process Admin {
 		od
 	}
 }
+
+Nota: está bien pero la solución debería implementar que un espectador de paso al siguiente.
+Acá se debería hacer lo que quise evitar en el anterior ejercicio. La solución es compleja.
