@@ -36,3 +36,42 @@ Process Admin {
 
 Nota: está bien pero la solución debería implementar que un espectador de paso al siguiente.
 Acá se debería hacer lo que quise evitar en el anterior ejercicio. La solución es compleja.
+
+process Admin
+{
+	queue Fila(int);
+    bool maquinaLibre = true;
+    int cantEspectadores = 0;
+    int esperando = 0;
+	int idAux = ?;
+	int idSig = ?;
+
+    do cantEspectadores < E; Espectador[*]?pedirAcceso(idAux) ->
+        if(maquinaLibre) 
+		{
+            //Da acceso a la maquina al siguiente
+            Espectador[idAux]!esperarAcceso();
+            maquinaLibre = false;
+        } 
+		else {
+            //Si estan usando la maquina, espera en la cola
+            push(Fila, idAux);
+            esperando++;
+        }
+        cantEspectadores++;
+    □ maquinaLibre = false; Espectador[*]?liberarAcceso() ->
+        if(esperando > 0) 
+		{
+            //Despierta al siguiente
+            pop(Fila, idSig);
+            Espectador[idSig]!esperarAcceso();
+            esperando--;
+        } 
+		else {
+            maquinaLibre = true;
+        }
+    od
+}
+
+Edit: está fue la solución que hizo un amigo y fue corregida. La adapte a la mía así que
+puede que me haya dejado algún nombre sin cambiar.
