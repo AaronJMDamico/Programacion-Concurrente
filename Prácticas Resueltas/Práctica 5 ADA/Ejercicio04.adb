@@ -50,7 +50,7 @@ procedure Ejercicio04 is
             accept pedidoEnfermera(Nota: in text) do
                -- Atiende a la enfermera
             end pedidoEnfermera;
-         or when pedidoPersona'Count = 0 =>
+         or when pedidoPersona'Count = 0 and pedidoEnfermera'Count = 0 =>
             accept pedidoNota(Nota: in text) do
                -- Procesa una nota
             end pedidoNota;
