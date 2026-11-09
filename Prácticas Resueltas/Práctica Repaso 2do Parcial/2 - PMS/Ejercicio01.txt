@@ -1,0 +1,38 @@
+1) En una oficina existen 100 empleados que envían documentos para imprimir en 5 impresoras
+compartidas. Los pedidos de impresión son procesados por orden de llegada y se asignan a la primera
+impresora que se encuentre libre. Implemente un programa que permita resolver el problema anterior
+usando PMA.
+
+Process Empleado [id: 0..99] {
+	text doc, res
+
+	Admin!documentoEnviado(id, doc)
+	Impresora[*]?documentoImpreso(res)
+}
+
+Process Impresora [id: 0..4] {
+	int idEmp = ?
+	text doc, res
+
+	while true {
+		Admin!libre(id)
+		Admin?documentoPedido(idEmp, doc)
+		// imprime el documento
+		Empleadp[idEmp]!documentoImpreso(res)
+	}
+}
+
+Process Admin {
+	int idEmp = ?
+	int idImp = ?
+	text doc
+
+	while true {
+		if Empleado[*]?documentoEnviado(idEmp, doc) ->
+			push(Cola, idEmp, doc)
+		□ not empty(Cola); Impresora[*]?libre(idImp) ->
+			pop(Cola, idEmp, doc)
+			Impresora[idImp]!documentoPedido(idEmp, doc)
+		fi
+	}
+}
