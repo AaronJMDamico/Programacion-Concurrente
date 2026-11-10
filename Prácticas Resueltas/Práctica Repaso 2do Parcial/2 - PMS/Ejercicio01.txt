@@ -26,6 +26,7 @@ Process Admin {
 	int idEmp = ?
 	int idImp = ?
 	text doc
+	queue Cola
 
 	while true {
 		if Empleado[*]?documentoEnviado(idEmp, doc) ->

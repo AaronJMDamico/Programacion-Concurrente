@@ -23,7 +23,7 @@ Process Terminal {
 			} else {
 				push(Cola, idAux)
 			}
-		□ Persona[*]?liberarAcceso(idAux) {
+		□ Persona[*]?liberarAcceso() {
 			if not empty(Cola) {
 				pop(Cola, idAux)
 				Persona[idAux]!esperarAcceso()

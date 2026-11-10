@@ -1,0 +1,57 @@
+3) Resolver el siguiente problema con PMA. En un negocio de cobros digitales hay P personas que
+deben pasar por la única caja de cobros para realizar el pago de sus boletas. Las personas son
+atendidas de acuerdo con el orden de llegada, teniendo prioridad aquellos que deben pagar menos
+de 5 boletas de los que pagan más. Adicionalmente, las personas embarazadas tienen prioridad sobre
+los dos casos anteriores. Las personas entregan sus boletas al cajero y el dinero de pago; el cajero les
+devuelve el vuelto y los recibos de pago.
+
+chan pedirAccesoEmbarazadas(int)
+chan pedirAccesoBoletas(int)
+chan pedirAcceso(int)
+chan enviarPago(real, int)
+chan esperarAcceso[P]()
+chan pagoResultado[P](real, text)
+
+Process Persona [id: 0..P-1] {
+	real dinero = ?
+	int boletas = ?
+	bool esEmbarazada = ?
+	real vuelto = 0
+	text recibo
+
+	if (esEmbarazada) {
+		send pedirAccesoEmbarazadas(id)
+	} else if (boletas < 5) {
+		send pedirAccesoBoletas(id)
+	} else {
+		send pedirAcceso(id)
+	}
+	send aviso()
+	recieve esperarAcceso[id]()
+	// simulamos el acceso a la caja
+	send enviarPago(dinero, boletas)
+	receive pagoResultado[id](vuelto, recibo)
+}
+
+Process Caja {
+	int idAux = ?
+	real dinero = ?
+	int boletas = ?
+	real vuelto
+	text recibo
+	
+	while true {
+		receive aviso()
+		if (not empty (pedirAccesoEmbarazadas)) ->
+			receive pedirAccesoEmbarazadas(idAux)
+		□ (not empty (pedirAccesoBoletas)) and (empty (pedirAccesoEmbarazadas)) ->
+			receive pedirAccesoBoletas(idAux)
+		□ (not empty (pedirAcceso)) and (empty (pedirAccesoBoletas)) and (empty (pedirAccesoEmbarazadas)) ->
+			receive pedirAcceso(idAux)
+		fi
+		send esperarAcceso[idAux]()
+		receive enviarPago(dinero, boletas)
+		// efectua el pago
+		send pagoResultado[idAux](vuelto, recibo)
+	}
+}

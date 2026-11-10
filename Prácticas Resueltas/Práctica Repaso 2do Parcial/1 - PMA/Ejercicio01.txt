@@ -1,7 +1,6 @@
 1) En una oficina existen 100 empleados que envían documentos para imprimir en 5 impresoras
 compartidas. Los pedidos de impresión son procesados por orden de llegada y se asignan a la primera
-impresora que se encuentre libre. Implemente un programa que permita resolver el problema anterior
-usando PMA.
+impresora que se encuentre libre. Resuelva el mismo problema anterior pero ahora usando PMS.
 
 chan documentoEnviado(int, text)
 chan documentoImpreso[100]()
