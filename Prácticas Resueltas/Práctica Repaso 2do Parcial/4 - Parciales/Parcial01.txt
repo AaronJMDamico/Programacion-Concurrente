@@ -1,0 +1,53 @@
+Programación Concurrente ATIC/Redictado Programación Concurrente - Primera fecha de MD - 10/06/2026 - Tema 1
+
+1) Resolver con PASAJE DE MENSAJES SINCRÓNICOS (PMS) el siguiente problema. En una empresa de telefonía hay un
+empleado para atender por mail a C clientes que van a tramitar la compra de una línea telefónica. Cada cliente hace un único
+trámite enviando sus datos y esperando el número de la línea comprada. El empleado atiende los trámites de los clientes de
+acuerdo con el orden en que se hicieron. Nota: todos los procesos deben terminar; no usar procesos que no sean necesarios.
+
+Process Cliente [id: 0..C-1] {
+    mail : string = ?
+    tel : int
+
+    Admin!solicitarTurno(id, mail)
+    Empelado?esperarResultado(tel)
+}
+
+Process Empleado {
+    idAux : int
+    mailAux : string
+    telAux : int
+    termine : bool
+
+    termine := false
+    while not termine {
+        Admin!libre()
+        Admin?recibirTurno(idAux, mailAux)
+        if mailAux <> "FIN" {
+            telAux := crearNumero()
+            Cliente[idAux]!esperarResultado(telAux)
+        } else {
+            termine := true
+        }
+    }
+}
+
+Process Admin {
+    idAux : int
+    mailAux : string
+    Cola : queue
+    atendidos : int
+
+    atendidos := 0
+    while atendidos < C {
+        if Cliente[*]?solicitarTurno(idAux) ->
+            push(Cola, idAux, mailAux)
+        [] not empty(Cola); Empleado?libre() ->
+            pop(Cola, idAux, mailAux)
+            Empleado!recibirTurno(idAux, mailAux)
+            atendidos++
+        fi
+    }
+    Empleado?libre()
+    Empleado?recibirTurno(-1, "FIN")
+}

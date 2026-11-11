@@ -1,0 +1,66 @@
+Programación Concurrente - 10/11/25 - Tema 1
+
+1) En un estadio de fútbol se dará un recital al que asistirán P personas. Para ello, cada asistente debe retirar su
+entrada por alguna de las 3 boleterías del estadio presentando su DNI (cada persona retira una única
+entrada). Los asistentes son atendidos por orden de llegada por alguno de los 3 empleados del club (cada
+empleado atiende una boletería). Implemente una solución usando PMA, considerando que los empleados
+atienden infinitamente. Notas: maximizar la concurrencia. La función obtenerEntrada(dni) le retorna al
+empleado la entrada para el DNI provisto por argumento; la función obtenerDNI() retorna el DNI para la
+persona que la invoca.
+
+chan solicitarEntrada(int, int)
+chan recibirEntrada[P](string)
+
+Process Persona [id: 0..P-1] {
+    dni : int
+    entrada : string
+
+    dni := obtenerDNI()
+    send solicitarEntrada(id, dni)
+    receive recibirEntrada[id](entrada)
+}
+
+Process Empleado [id: 0..2] {
+    idAux : int
+    entrada : string
+
+    while true {
+        receive solicitarEntrada(idAux, dni)
+        entrada := obtenerEntrada(dni)
+        send recibirEntrada[idAux](entrada)
+    }
+}
+
+2) En un gimnasio hay una bicicleta de alta gama (que sólo puede ser usada por una persona a la vez) y un
+entrenador que controla su uso. También hay P deportistas que deben usar la bicicleta una única vez.
+Implemente una solución usando PMS considerando que el entrenador da acceso según el orden de llegada.
+
+Process Deportista [id: 0..P-1] {
+    Entrenador!solcitarAcceso(id)
+    Entrenador?esperarAcceso()
+    // usa la bicicleta
+    Entrenador!liberarAcceso()
+}
+
+Process Entrenador {
+    cola : queue
+    libre : bool := true
+
+    while true {
+        if Deportista[*]?solcitarAcceso(idAux) ->
+            if libre {
+                Deportista[idAux]!esperarAcceso()
+                libre := false
+            } else {
+                push(cola, idAux)
+            }
+        [] Deportista[*]?liberarAcceso() ->
+            if empty(cola) {
+                libre := true
+            } else {
+                pop(cola, idAux)
+                Deportista[idAux]!esperarAcceso()
+            }
+        fi
+    }
+}
