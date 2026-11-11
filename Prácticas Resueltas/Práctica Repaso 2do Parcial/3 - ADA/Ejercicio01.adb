@@ -17,9 +17,8 @@ procedure Ejercicio01 is
    arrBancos : array (1..20) of banco;
 
    task body central is
-      i : Integer = 1;
    begin
-      while true loop
+      loop
          for i in 1..20 loop
             select
                arrBancos(i).consulta();

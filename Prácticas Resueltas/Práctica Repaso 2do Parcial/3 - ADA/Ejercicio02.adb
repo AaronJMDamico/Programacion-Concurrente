@@ -35,7 +35,6 @@ begin
 end persona;
 
 task body caja is
-   
 begin
    loop
       select

@@ -35,7 +35,6 @@ end sucursal;
 task body central is
    idAux : Integer;
    ventas : Integer;
-   i : Integer := 1;
    total : Integer;
 begin
    loop
