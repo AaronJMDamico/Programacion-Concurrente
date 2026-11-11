@@ -12,6 +12,48 @@
 
 procedure Ejercicio03 is
 
+task type sucursal;
+
+task central is
+   entry solicitarArticulo(id: out Integer);
+   entry recibirResultado(ventas: in Integer);
+end central;
+
+arrSucursales : array (1..100) of sucursal;
+
+task body sucursal is
+   idAux : Integer;
+   ventas : Integer;
+begin
+   loop
+      central.solicitarArticulo(idAux);
+      ventas := obtenerVentas(idAux);
+      central.recibirResultado(ventas);
+   end loop;
+end sucursal;
+
+task body central is
+   idAux : Integer;
+   ventas : Integer;
+   i : Integer := 1;
+   total : Integer;
+begin
+   loop
+      idAux := generarArtículo();
+      total := 0;
+      for i in 1..100 loop
+         accept solicitarArticulo(id: out Integer) do
+            id := idAux;
+         end solicitarArticulo;
+      end loop;
+      for i in 1..100 loop
+         accept recibirResultado(ventas: in Integer) do
+               total := total + ventas;
+         end recibirResultado;
+      end loop;
+      -- informo la cantidad total y sigo con el siguiente
+   end loop;
+end central;
 
 begin
    null;

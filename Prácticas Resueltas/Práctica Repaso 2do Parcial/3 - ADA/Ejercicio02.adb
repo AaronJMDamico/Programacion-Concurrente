@@ -28,9 +28,9 @@ begin
    if esAnciano then
       caja.pedidoAncianos(dinero, boletas, vuelto, recibo)
    elsif boletas < 5 then
-      caja.pedidoBoletas(dinero, boletas, miVuelto, miRecibo)
+      caja.pedidoBoletas(dinero, boletas, vuelto, recibo)
    else 
-      caja.pedidoNormal(dinero, boletas, miVuelto, miRecibo)
+      caja.pedidoNormal(dinero, boletas, vuelto, recibo)
    end if;
 end persona;
 
